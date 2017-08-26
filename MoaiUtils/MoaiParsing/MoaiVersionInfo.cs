@@ -9,22 +9,21 @@ using MoaiUtils.Tools;
 
 namespace MoaiUtils.MoaiParsing {
     public class MoaiVersionInfo {
-        public MoaiVersionInfo(DirectoryInfo moaiDirectory) {
-            DirectoryInfo configDir = moaiDirectory.GetDirectoryInfo(@"src\config-default");
-            try {
-                // Read all version files
-                string versionText = configDir.GetFiles("*.h")
-                    .Select(file => file.ReadAllText())
-                    .Join("\n");
+        public MoaiVersionInfo(DirectoryInfo moaiDirectory)
+        {
 
-                // Extract values
+
+           string versionFile = Path.Combine(moaiDirectory.FullName, "src/moai-core/moai_version.h");
+
+           string versionText = File.ReadAllText(versionFile);
+            try { 
                 Major = ParseInt("MOAI_SDK_VERSION_MAJOR", versionText);
                 Minor = ParseInt("MOAI_SDK_VERSION_MINOR", versionText);
                 Revision = ParseInt("MOAI_SDK_VERSION_REVISION", versionText);
-                Author = Regex.Match(versionText, @"MOAI_SDK_VERSION_AUTHOR\s+""(.*?)""").Groups[1].Value;
+               // Author = Regex.Match(versionText, @"MOAI_SDK_VERSION_AUTHOR\s+""(.*?)""").Groups[1].Value;
             } catch (Exception e) {
                 throw new PlainTextException("Error determining Moai version from '{0}'. {1}",
-                    configDir.FullName, e.Message);
+                    versionFile, e.Message);
             }
         }
 

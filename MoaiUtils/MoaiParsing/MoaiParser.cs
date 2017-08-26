@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using MoaiUtils.Common;
 using MoaiUtils.MoaiParsing.Checks;
+using MoaiUtils.MoaiParsing.CodeGraph;
 using MoaiUtils.MoaiParsing.CodeGraph.Types;
 using MoaiUtils.MoaiParsing.Parsing;
 using MoaiUtils.Tools;
@@ -53,7 +54,29 @@ namespace MoaiUtils.MoaiParsing {
                 if (!(moaiClass.AncestorClasses.Contains(luaObjectClass)) && moaiClass != luaObjectClass) {
                     moaiClass.BaseClasses.Add(luaObjectClass);
                 }
+                // Make sure every class has a new
+                if (moaiClass.Members.FirstOrDefault(x => x.Name == "new") == null && moaiClass.ClassPosition != null)
+                {
+                    moaiClass.Members.Add(
+                        new Method()
+                        {
+                            OutParameterSignature = new MoaiParsing.Parameter() { Name = "object", Type = moaiClass.Name },
+                            Name = "new",
+                            Description = "Create new instance of " + moaiClass.Name,
+                            OwningClass = moaiClass,
+                            Body = "",
+                            MethodPosition = new MethodPosition(moaiClass.ClassPosition, "new"),
+                            Overloads = { new MethodOverload()
+                            {
+                                InParameters = { },
+                                IsStatic = true,
+                                OutParameters = { new OutParameter() { Description = "Result" , Name = "object", Type = moaiClass} }
+                            }}
+                        }
+                    );
+                }
             }
+          
 
             // Mark registered classes as scriptable
             statusCallback("Checking which classes are registered to be scriptable from Lua.");
