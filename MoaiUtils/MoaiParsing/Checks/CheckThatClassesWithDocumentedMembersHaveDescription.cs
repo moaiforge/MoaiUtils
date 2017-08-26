@@ -7,7 +7,7 @@ namespace MoaiUtils.MoaiParsing.Checks {
             var classesWithMembers = Classes.Where(c => c.Members.Any());
             foreach (MoaiClass moaiClass in classesWithMembers) {
                 if (moaiClass.Description == null) {
-                    Warnings.Add(moaiClass.ClassPosition, WarningType.MissingAnnotation,
+                    Warnings.Add(moaiClass.ClassPosition ?? moaiClass.DocumentationReferences.FirstOrDefault(), WarningType.MissingAnnotation,
                         string.Format("Class '{0}' has documented members but is missing a @text description.", moaiClass.Name));
                 }
             }
