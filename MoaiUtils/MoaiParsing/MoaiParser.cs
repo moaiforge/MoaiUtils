@@ -42,6 +42,14 @@ namespace MoaiUtils.MoaiParsing {
             statusCallback("Parsing Moai classes.");
             ParseMoaiCodeFiles(moaiDirectory);
 
+       
+          
+
+            // Mark registered classes as scriptable
+            statusCallback("Checking which classes are registered to be scriptable from Lua.");
+            MarkScriptableClasses(moaiDirectory);
+
+
             // MOAILuaObject is not documented, probably because it would mess up
             // the Doxygen-generated documentation. Use dummy code instead.
             statusCallback("Adding hard-coded documentation for MOAILuaObject base class.");
@@ -49,9 +57,11 @@ namespace MoaiUtils.MoaiParsing {
             FileParser.ParseMoaiCodeFile(MOAILuaObject.DummyCode, dummyFilePosition, types, Warnings);
 
             // Make sure every class directly or indirectly inherits from MOAILuaObject
-            MoaiClass luaObjectClass = (MoaiClass) types.GetOrCreate("MOAILuaObject", null);
-            foreach (MoaiClass moaiClass in types.OfType<MoaiClass>()) {
-                if (!(moaiClass.AncestorClasses.Contains(luaObjectClass)) && moaiClass != luaObjectClass) {
+            MoaiClass luaObjectClass = (MoaiClass)types.GetOrCreate("MOAILuaObject", null);
+            foreach (MoaiClass moaiClass in types.OfType<MoaiClass>().Where(x => x.IsScriptable))
+            {
+                if (!(moaiClass.AncestorClasses.Contains(luaObjectClass)) && moaiClass != luaObjectClass)
+                {
                     moaiClass.BaseClasses.Add(luaObjectClass);
                 }
                 // Make sure every class has a new
@@ -65,7 +75,7 @@ namespace MoaiUtils.MoaiParsing {
                             Description = "Create new instance of " + moaiClass.Name,
                             OwningClass = moaiClass,
                             Body = "",
-                            MethodPosition = new MethodPosition(moaiClass.ClassPosition, "new"),
+                            MethodPosition = new MethodPosition(moaiClass.ClassPosition, "_new"),
                             Overloads = { new MethodOverload()
                             {
                                 InParameters = { },
@@ -76,11 +86,6 @@ namespace MoaiUtils.MoaiParsing {
                     );
                 }
             }
-          
-
-            // Mark registered classes as scriptable
-            statusCallback("Checking which classes are registered to be scriptable from Lua.");
-            MarkScriptableClasses(moaiDirectory);
 
             // Perform additional checks that do not alter the code graph
             var checks = GetChecks();
